@@ -1,0 +1,174 @@
+---
+title: "Informe"
+output:
+  html_document:
+    df_print: paged
+---
+
+Leemos el conjunto de dato "listings"
+
+```{r, message=FALSE}
+library(readr)
+listings <- read_delim(
+  "C:/Users/34611/OneDrive - UNIR/Análisis e Interpretación de Datos/Actividad 1/Informe/listings.csv",
+  delim = ";",
+  col_names = TRUE,
+  locale = locale(encoding = "Latin1")
+)
+head(listings)
+```
+# Modelo muestral
+
+```{r}
+
+```
+
+# Modelo numérico
+
+```{r}
+n_fil <- nrow(listings)
+cat("Hay ", n_fil, "filas") 
+
+n_col <- ncol(listings)
+cat("Hay ", n_col, "columnas") 
+```
+A continuación se muestra un resumen de todas las columnas numéricas que nos interesan (eliminando los id's y las medidas de longitud y latitud).
+
+```{r}
+
+for (i in 1:ncol(listings)){
+  if (is.numeric(listings[[i]]) && colnames(listings)[i] != "id" && colnames(listings)[i] != "host_id" && colnames(listings)[i] != "latitude" && colnames(listings)[i] != "longitude"){
+    cat(colnames(listings)[i], "\n")
+    print(summary(listings[[i]]))
+  }
+  
+}
+```
+
+# Modelo gráfico
+
+Boxplot para las variables numéricas
+
+```{r}
+
+
+eliminOutliers <- function(col) {
+  Q1 <- quantile(col, 0.25, na.rm = TRUE)
+  Q3 <- quantile(col, 0.75, na.rm = TRUE)
+  IQR <- Q3 - Q1
+  
+  inf <- Q1 - 1.5 * IQR
+  sup <- Q3 + 1.5 * IQR
+  
+  # reemplazar outliers por NA, sin cambiar la longitud
+  col[col < inf | col > sup] <- NA
+  
+  return(col)
+}
+
+
+cols <- c(
+  "price",
+  "minimum_nights",
+  "number_of_reviews",
+  "reviews_per_month",
+  "calculated_host_listings_count",
+  "availability_365",
+  "number_of_reviews_ltm"
+)
+
+for (c in cols) {
+  listings[[c]] <- eliminOutliers(listings[[c]])
+}
+par(mfrow = c(2, 3))  
+
+boxplot(listings$price, main="Price")
+boxplot(listings$minimum_nights, main="Minimum nights")
+boxplot(listings$number_of_reviews, main="Number of reviews")
+boxplot(listings$reviews_per_month, main="Reviews per month")
+boxplot(listings$calculated_host_listings_count, main="Host listings")
+boxplot(listings$availability_365, main="Availability 365")
+#boxplot(listings$number_of_reviews_ltm, main="Reviews LTM", ylim=c(0,35000))
+
+```
+Variables categóricas: room_type y neighbourhood_group
+
+room_type
+
+```{r}
+freq <- table(listings$room_type)
+
+# Agrupar categorías pequeñas en "Otros"
+freq_agrupada <- freq
+freq_agrupada[freq <= 2] <- 0          # temporal
+otros <- sum(freq[freq <= 2])          # suma de categorías pequeñas
+if (otros > 0) {
+  freq_agrupada <- freq_agrupada[freq_agrupada > 0]  # eliminar pequeñas
+  freq_agrupada <- c(freq_agrupada, Otros = otros)   # añadir "Otros"
+}
+
+# Ordenar de mayor a menor la tabla agrupada
+freq_agrupada <- sort(freq_agrupada, decreasing = TRUE)
+
+# Barplot y guardar posiciones de las barras
+bp <- barplot(freq_agrupada,
+              col = "skyblue",
+              las = 1,
+              main = "Distribución de Tipo de alojamiento",
+              ylab = "Frecuencia",
+              ylim = c(0, 13000),
+              cex.names = 0.7, )
+
+# Añadir números encima de cada barra
+text(x = bp, 
+     y = freq_agrupada, 
+     label = freq_agrupada, 
+     pos = 3,        # 3 = encima de la barra
+     cex = 0.8,      # tamaño del texto
+     col = "black")
+
+```
+
+neighbourhood_group
+
+```{r}
+freq_NG <- table(listings$neighbourhood_group)
+freq_NG <- sort(freq_NG, decreasing = TRUE)
+
+otros<- sum(freq_NG[freq_NG <= 6])
+freq_NG <- freq_NG[freq_NG >6]
+#Agrupamos 
+if(otros > 0){
+  freq_NG["Otros"] <- otros
+}
+
+heights <- as.numeric(freq_NG)
+names(heights) <- names(freq_NG)
+par(mar = c(10, 4, 4, 2))   # margen inferior grande
+bp <- barplot(heights, 
+              las=2, 
+              cex.names= 0.7, 
+              ylim = c(0, 8000), 
+              col="skyblue",              
+              main = "Distribución de Barrios",
+              ylab = "Frecuencia")
+
+# Añadir números encima de cada barra
+text(x = bp, 
+     y = freq_NG, 
+     label = freq_NG, 
+     pos = 3,        # 3 = encima de la barra
+     cex = 0.8,      # tamaño del texto
+     col = "black")
+
+```
+
+# Modelo de relaciones/ modelo de distribución
+
+```{r}
+
+```
+
+```{r}
+
+```
